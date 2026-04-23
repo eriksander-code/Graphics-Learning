@@ -29,6 +29,8 @@ build_dir:
 compile:
 	$(CXX) $(SOURCES) $(CXXFLAGS) $(LDFLAGS) -o $(OUT)
 
+.PHONY: copy_assets  # Isso avisa o make para sempre rodar essa regra, sem checar datas
+
 copy_assets:
 	$(CP_ASSETS)
 
