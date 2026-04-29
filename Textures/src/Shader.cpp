@@ -1,0 +1,209 @@
+#include "Shader.h"
+
+Shader::Shader() 
+{
+    
+}
+
+Shader::~Shader() 
+{
+    if (ShaderProgID != 0)
+        glDeleteProgram(ShaderProgID);
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Config
+
+// Make a Basic shaders from default directories
+void Shader::CreateBasicShaders(std::string path_vertex, std::string path_fragment) {
+    ProcessVertexShader(path_vertex);
+    CompileVertexShader(GetVertexShader().c_str());
+
+    ProcessFragmentShader(path_fragment);
+    CompileFragmentShader(GetFragmentShader().c_str());
+
+    AttachShaderProgram();
+    LinkShaderProgram();
+    ReleaseShaders();
+}
+
+// Proccess vertex shader source code
+void Shader::ProcessVertexShader(std::string path) 
+{
+    vertexShader.str("");
+    vertexShader.clear();
+
+    std::ifstream file;
+
+    file.open(path);
+        if (file.is_open()) {
+            vertexShader << file.rdbuf();
+            std::cout << "VERTEX_SHADER::OPENED_SUCCESSFULLY" << std::endl;
+
+        } else {
+            std::cout << "VERTEX_SHADER::COULD_NOT_OPEN_ARCHIVE\nSHADER_MUST_BE::project_name/shader/shader.vert";
+        }
+    file.close(); 
+}
+
+// Compiles vertex shader
+void Shader::CompileVertexShader(const char* vertexShaderSourceCode) {
+    // vertex Shader
+    vShaderID = glCreateShader(GL_VERTEX_SHADER);
+
+    glShaderSource(vShaderID, 1, &vertexShaderSourceCode, NULL);
+    glCompileShader(vShaderID);
+
+    glGetShaderiv(vShaderID, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vShaderID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    } else {
+        std::cout << "VERTEX_SHADER::COMPILED_SUCCESSFULLY" << std::endl;
+    }
+}
+
+// Proccess fragment shader source code
+void Shader::ProcessFragmentShader(std::string path) 
+{
+    fragmentShader.str("");
+    fragmentShader.clear();
+
+    std::ifstream file;
+
+    file.open(path);
+        if (file.is_open()) {
+            fragmentShader  << file.rdbuf();
+            std::cout << "FRAGMENT_SHADER::OPENED_SUCCESSFULLY" << std::endl;
+
+        } else {
+            std::cout << "FRAGMENT_SHADER::COULD_NOT_OPEN_ARCHIVE\nSHADER_MUST_BE::project_name/shader/shader.frag";
+        }
+    file.close(); 
+}
+
+// Compiles fragment shader
+void Shader::CompileFragmentShader(const char* fragmentShaderSourceCode) {
+    // Fragment shader 
+    // relacionado a saida de cores do vertex
+    
+    fShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fShaderID, 1, &fragmentShaderSourceCode, NULL);
+    glCompileShader(fShaderID);
+
+    glGetShaderiv(fShaderID, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fShaderID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    } else {
+        std::cout << "FRAGMENT_SHADER::COMPILED_SUCCESSFULLY" << std::endl;
+    }
+}
+
+// Attaches created shaders to the shader program
+void Shader::AttachShaderProgram() {
+    // shader programs
+    ShaderProgID = glCreateProgram();
+    glAttachShader(ShaderProgID, vShaderID);
+    glAttachShader(ShaderProgID, fShaderID);
+}
+
+// Links shaders
+void Shader::LinkShaderProgram() {
+    // shader programs
+    glLinkProgram(ShaderProgID);
+
+    glGetProgramiv(ShaderProgID, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(ShaderProgID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
+    } else {
+        std::cout << "SHADER_PROGRAM::LINKED_SUCCESSFULLY" << std::endl;
+    }
+}
+
+// Deletes shaders
+void Shader::ReleaseShaders() 
+{
+    glDeleteShader(vShaderID);   // os objetos do shader não são mais necessários, 
+    vShaderID = 0;               // DeleteShader ignora IDs com valor zero, evita erro de memoria
+
+    glDeleteShader(fShaderID); // ja foram vinculados e compilados   
+    fShaderID = 0;
+}
+
+// Use shader program
+void Shader::Use() {
+    glUseProgram(ShaderProgID);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Getters
+
+std::string Shader::GetVertexShader() {
+    return vertexShader.str();
+}
+
+u32 Shader::GetVertexShaderID() {
+    return vShaderID;   
+}
+
+std::string Shader::GetFragmentShader() {
+    return fragmentShader.str();
+}
+
+u32 Shader::GetFragmentShaderID() {
+    return fShaderID;   
+}
+
+std::string Shader::GetShaderProgram() {
+    return shaderProgram.str();
+}
+
+u32 Shader::GetShaderProgramID() {
+    return ShaderProgID;   
+}
+
+std::string Shader::GetError() {
+    return error.str();
+}
+
+i32 Shader::GetSuccessStatus() {
+    return success;
+}
+
+char* Shader::GetInfoLog() {
+    return infoLog; // retorna ponteiro para array
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Setters
+
+void Shader::setFloat(const char* name_var, float value) {
+    glUniform1f(glGetUniformLocation(ShaderProgID, name_var), value);
+}
+void Shader::setInt(const char* name_var, int value) {
+    glUniform1i(glGetUniformLocation(ShaderProgID, name_var), value);
+}
+void Shader::setBool(const char*  name_var, bool value) {
+    glUniform1i(glGetUniformLocation(ShaderProgID, name_var), (int)value);
+}
+void Shader::setVec2Float(const char* name_var, float value_1, float value_2) {
+    glUniform2f(glGetUniformLocation(ShaderProgID, name_var), value_1, value_2);
+}
+void Shader::setVec3Float(const char* name_var, float value_1, float value_2, float value_3) {
+    glUniform3f(glGetUniformLocation(ShaderProgID, name_var), value_1, value_2, value_3);
+}
+void Shader::setVec4Float(const char* name_var, float value_1, float value_2, float value_3, float value_4) {
+    glUniform4f(glGetUniformLocation(ShaderProgID, name_var), value_1, value_2, value_3, value_4);
+}
+void Shader::setVec2Int(const char* name_var, int value_1, int value_2) {
+    glUniform2i(glGetUniformLocation(ShaderProgID, name_var), value_1, value_2);
+}
+void Shader::setVec3Int(const char* name_var, int value_1, int value_2, int value_3) {
+    glUniform3i(glGetUniformLocation(ShaderProgID, name_var), value_1, value_2, value_3);
+}
+void Shader::setVec4Int(const char* name_var, int value_1, int value_2, int value_3, int value_4) {
+    glUniform4i(glGetUniformLocation(ShaderProgID, name_var), value_1, value_2, value_3, value_4);
+}

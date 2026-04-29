@@ -1,0 +1,16 @@
+Para compilar no Linux:
+make
+Atalho: CTRL + ALT + N
+
+Para compilar para Windows:
+make TARGET=WINDOWS
+Atalho: CTRL + SHIFT + B
+
+Para limpar pasta build:
+make clean
+
+////////////////////////////////////
+
+mingw-w64 - msys64
+
+ATENÇÃO: este arquivo precisa da pastas shaders no mesmo diretorio para rodar
